@@ -8,7 +8,7 @@ use Monolog\Logger;
 
 $injector = new Injector();
 
-$injector->define(Logger::class, [':name' => 'server']);
+$injector->define(Logger::class, [':name' => 'controllerLog']);
 $injector->prepare(Logger::class, function ($obj, $injector) {
     // change this to be full in the container
     $logHandler = new StreamHandler(new ResourceOutputStream(STDOUT));
