@@ -1,0 +1,22 @@
+{
+    "name": "thgs/stickman",
+    "description": "a web framework based on amphp",
+    "type": "project",
+    "require": {
+        "amphp/http-server": "^2.1",
+        "amphp/http-server-router": "^1.0",
+        "php": "^8.0"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Thgs\\Stickman\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "thgs",
+            "email": "theogpl57@gmail.com"
+        }
+    ]
+}
