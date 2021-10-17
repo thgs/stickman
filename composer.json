@@ -6,7 +6,8 @@
         "amphp/http-server": "^2.1",
         "amphp/http-server-router": "^1.0",
         "php": "^8.0",
-        "rdlowrey/auryn": "^1.4"
+        "rdlowrey/auryn": "^1.4",
+        "amphp/log": "^1.1"
     },
     "license": "MIT",
     "autoload": {
