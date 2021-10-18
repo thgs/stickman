@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
+use Amp\Http\Server\Router;
 use Amp\Http\Status;
 use Generator;
 use Psr\Log\LoggerInterface;
@@ -21,5 +22,17 @@ class TestController
         $this->logger->info('works here');
         
         return new Response(Status::OK, ['content-type' => 'text/plain'], 'Finally, some .. action!'); 
+    }
+
+    #[Route(method: "POST", path: "some-post-action")]
+    public function somePostAction(Request $request): Response|Generator
+    {
+        return new Response(Status::OK, ['content-type' => 'text/plain'], 'Finally, some POST action!'); 
+    }
+
+    #[Route(method: "GET", path: "some-arg-action/{name}")]
+    public function someArgAction(Request $request, $name): Response|Generator
+    {
+        return new Response(Status::OK, ['content-type' => 'text/plain'], 'Name: ' . $name); 
     }
 }

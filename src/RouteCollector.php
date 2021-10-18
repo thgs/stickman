@@ -37,13 +37,22 @@ class RouteCollector
         $routeArguments = $attribute->getArguments();
 
         $callable = $method->class . '::' . $method->name;
-        $requestHandler = new CallableRequestHandler(function (Request $request) use ($callable) {
-            try {
-                return $this->injector->execute($callable, [':request' => $request]);
-            } catch (\Throwable $e) {
-                var_dump($e->getTraceAsString());
+        $requestHandler = new CallableRequestHandler(
+            function (Request $request) use ($callable) {
+                try {
+                    $arguments = [':request' => $request];
+                    foreach ($request->getAttribute(Router::class) as $key => $value) {
+                        // if passed without ':', it will try to instantiate the class given (!)
+                        $arguments[':' . $key] = $value;
+                    }
+
+                    return $this->injector->execute($callable, $arguments);
+                } catch (\Throwable $e) {
+                    $this->logger->error(get_class($e) . ' - ' . $e->getMessage());
+                    var_dump($e->getTraceAsString());
+                }
             }
-        });
+        );
 
         $this->router->addRoute($routeArguments['method'], $routeArguments['path'], $requestHandler);
     }
