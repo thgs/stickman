@@ -9,9 +9,7 @@ use Monolog\Logger;
 use Psr\Container\ContainerInterface as Psr11Container;
 use ReflectionAttribute;
 use ReflectionClass;
-use Thgs\Stickman\Dispatch\AurynDispatcher;
 use Thgs\Stickman\Dispatch\DispatchCall;
-use Thgs\Stickman\Dispatch\Psr11Dispatcher;
 use TypeError;
 
 class RouteCollector
@@ -54,19 +52,17 @@ class RouteCollector
         return $instances;
     }
 
-    private function getDispatcherCallback(DispatchCall $dispatchCall): callable
+    private function getDispatcher(DispatchCall $dispatchCall): Dispatcher
     {
-        if ($this->container instanceof Injector) {
-            return new AurynDispatcher($this->container, $this->logger, $dispatchCall);
-        }
+        $instance = $this->containerMake($dispatchCall->getClass());
 
-        return new Psr11Dispatcher($this->container, $this->logger, $dispatchCall);
+        return new Dispatcher($instance, $dispatchCall, $this->logger);
     }
 
     private function addRoutes(DispatchCall $dispatchCall, array $routes)
     {
-        $callable = $this->getDispatcherCallback($dispatchCall);
-        $requestHandler = new CallableRequestHandler($callable);
+        $dispatcher = $this->getDispatcher($dispatchCall);
+        $requestHandler = new CallableRequestHandler($dispatcher);
 
         foreach ($routes as $route) {
             if (!$route instanceof Route) {
@@ -78,7 +74,8 @@ class RouteCollector
                 $middleware[] = $this->containerMake($middlewareClass);
             }
 
-            $this->logger->debug('Adding route: ' . $route->getMethod() . ' ' . $route->getPath() . ' -> ' . $dispatchCall->getCallable());
+            $this->logger->debug('Add route: ' . $route->getMethod() . ' ' . $route->getPath() . ' -> ' . $dispatchCall->getCallable());
+
             $this->router->addRoute($route->getMethod(), $route->getPath(), $requestHandler, ...$middleware);
         }
     }
