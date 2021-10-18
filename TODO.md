@@ -19,6 +19,14 @@ For alpha
 12. Write tests
 13. Review the classes public methods, maybe make the exported api better?
 
+14. Support PSR container
+15. Make Stickman more than configuration
+16. Change to early instantiation rather than on-request that it is now
+
 For beta?
 
 1. PSR-12 ?
+
+
+
+Stickman :: Container -> Handlers -> Servers -> Options -> logname -> HttpServer
