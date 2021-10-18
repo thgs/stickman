@@ -12,7 +12,7 @@ Amp\Loop::run(static function () {
     $serversCollection = require \dirname(__DIR__) . '/app/config/servers.php';
     $options = require \dirname(__DIR__) . '/app/config/httpServerOptions.php';
 
-    $stickman = new Stickman($containerConfig, $handlersCollection, $serversCollection, $options);
+    $stickman = new Stickman($containerConfig->getContainer(), $handlersCollection, $serversCollection, $options);
 
     # Start server
     $server = $stickman->httpServer;

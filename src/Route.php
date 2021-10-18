@@ -7,10 +7,22 @@ use Attribute;
 #[Attribute]
 class Route
 {
-    public function __construct(public string $method = '', public string $path = '', public array $middleware = [])
+    public function __construct(private string $method = '', private string $path = '', private array $middleware = [])
     {
     }
 
-    // @todo do we have to use getArguments on reflection? cant we have an instance of this class?
-    // @see ReflectionAttribute.newInstance
+    public function getMethod()
+    {
+        return $this->method;
+    }
+
+    public function getPath()
+    {
+        return $this->path;
+    }
+
+    public function getMiddleware()
+    {
+        return $this->middleware;
+    }
 }

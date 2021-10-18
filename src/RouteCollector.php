@@ -2,91 +2,92 @@
 
 namespace Thgs\Stickman;
 
-use Amp\Http\Server\Request;
 use Amp\Http\Server\RequestHandler\CallableRequestHandler;
 use Amp\Http\Server\Router;
 use Auryn\Injector;
 use Monolog\Logger;
+use Psr\Container\ContainerInterface as Psr11Container;
 use ReflectionAttribute;
 use ReflectionClass;
-use ReflectionMethod;
+use Thgs\Stickman\Dispatch\AurynDispatcher;
+use Thgs\Stickman\Dispatch\DispatchCall;
+use Thgs\Stickman\Dispatch\Psr11Dispatcher;
 use TypeError;
 
-// collects routes and adds/configures a given Router
 class RouteCollector
 {
-    public function __construct(private Router $router, private Injector $injector, private Logger $logger)
+    public function __construct(private Router $router, private Psr11Container|Injector $container, private Logger $logger)
     {
     }
 
     public function collectFrom($class)
     {
         $reflection = new ReflectionClass($class);
+        $classAttributes = $reflection->getAttributes(Route::class);
+        $classRoutes = $this->getRouteAttributeInstances($classAttributes);
 
-        $classRoutes = $reflection->getAttributes(Route::class);
-        $this->addClassRoute($class, $classRoutes);
+        $dispatchCall = new DispatchCall($class);
+
+        $this->addRoutes($dispatchCall, $classRoutes);
 
         foreach ($reflection->getMethods() as $method) {
             $attributes = $method->getAttributes(Route::class);
+            $methodRoutes = $this->getRouteAttributeInstances($attributes);
+            
+            $dispatchCall = new DispatchCall($class, $method->getName());
 
-            /** @var ReflectionAttribute $attribute */
-            foreach ($attributes as $attribute) {
-                $this->addMethodRoute($method, $attribute);
-            }
+            $this->addRoutes($dispatchCall, $methodRoutes);
         }
     }
 
-    private function getDispatcherCallback(string $toDispatch): callable
+    private function getRouteAttributeInstances(array $attributes)
     {
-        return function (Request $request) use ($toDispatch) {
-            try {
-                $arguments = [':request' => $request];
-                foreach ($request->getAttribute(Router::class) as $key => $value) {
-                    // if passed without ':', it will try to instantiate the class given (!)
-                    $arguments[':' . $key] = $value;
-                }
-
-                return $this->injector->execute($toDispatch, $arguments);
-            } catch (\Throwable $e) {
-                $this->logger->error(get_class($e) . ' - ' . $e->getMessage());
-                var_dump($e->getTraceAsString());
-            }
-        };
-    }
-
-    private function addClassRoute(string $class, array $attributes)
-    {
-        $callable = $this->getDispatcherCallback($class . '::__invoke');
-        $requestHandler = new CallableRequestHandler($callable);
-
+        $instances = [];
         foreach ($attributes as $attribute) {
             if (!$attribute instanceof ReflectionAttribute) {
                 throw new TypeError('Expecting ReflectionAttribute');
             }
 
-            $routeArguments = $attribute->getArguments();
-            $middleware = [];
-            foreach ($routeArguments['middleware'] as $class) {
-                $middleware[] = $this->injector->make($class);
+            $instances[] = $attribute->newInstance();
+        }
+
+        return $instances;
+    }
+
+    private function getDispatcherCallback(DispatchCall $dispatchCall): callable
+    {
+        if ($this->container instanceof Injector) {
+            return new AurynDispatcher($this->container, $this->logger, $dispatchCall);
+        }
+
+        return new Psr11Dispatcher($this->container, $this->logger, $dispatchCall);
+    }
+
+    private function addRoutes(DispatchCall $dispatchCall, array $routes)
+    {
+        $callable = $this->getDispatcherCallback($dispatchCall);
+        $requestHandler = new CallableRequestHandler($callable);
+
+        foreach ($routes as $route) {
+            if (!$route instanceof Route) {
+                throw new TypeError('Expecting Route instance');
             }
 
-            $this->router->addRoute($routeArguments['method'], $routeArguments['path'], $requestHandler, ...$middleware);
+            $middleware = [];
+            foreach ($route->getMiddleware() as $middlewareClass) {
+                $middleware[] = $this->containerMake($middlewareClass);
+            }
+
+            $this->logger->debug('Adding route: ' . $route->getMethod() . ' ' . $route->getPath() . ' -> ' . $dispatchCall->getCallable());
+            $this->router->addRoute($route->getMethod(), $route->getPath(), $requestHandler, ...$middleware);
         }
     }
 
-    private function addMethodRoute(ReflectionMethod $method, ReflectionAttribute $attribute)
+    private function containerMake(string $definition)
     {
-        $routeArguments = $attribute->getArguments();
-
-        $callable = $this->getDispatcherCallback($method->class . '::' . $method->name);
-        $requestHandler = new CallableRequestHandler($callable);
-
-        $middleware = [];
-        foreach ($routeArguments['middleware'] as $class) {
-            $middleware[] = $this->injector->make($class);
-        }
-
-        $this->router->addRoute($routeArguments['method'], $routeArguments['path'], $requestHandler, ...$middleware);
+        return $this->container instanceof Injector
+            ? $this->container->make($definition)
+            : $this->container->get($definition);
     }
 
     public function getRouter()

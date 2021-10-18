@@ -10,6 +10,7 @@ use Amp\Log\ConsoleFormatter;
 use Amp\Log\StreamHandler;
 use Auryn\Injector;
 use Monolog\Logger;
+use Psr\Container\ContainerInterface as Psr11Container;
 
 class Stickman
 {
@@ -18,28 +19,25 @@ class Stickman
     public HttpServer $httpServer;
 
     public function __construct(
-        ConfiguredContainerFactoryInterface|Injector $containerOrFactory,
+        Psr11Container|Injector $container,
         HandlersCollection $handlers,
         ServerCollection $servers,
         Options $options = null,
         $logName = self::DEFAULT_LOGNAME
     ) {
-        /** @var Injector $injector */
-        $injector = $containerOrFactory instanceof Injector 
-            ? $containerOrFactory 
-            : $containerOrFactory->getContainer();
-
         $logger = $this->getLogger($logName);
 
         $router = new Router();
-        $routeCollector = new RouteCollector($router, $injector, $logger);
+        $routeCollector = new RouteCollector($router, $container, $logger);
         foreach ($handlers->collection as $class) {
             $routeCollector->collectFrom($class);
         }
         
         $this->httpServer = new HttpServer($servers->collection, $routeCollector->getRouter(), $logger, $options);
 
-        $injector->share($this->httpServer);
+        if ($container instanceof Injector) {
+            $container->share($this->httpServer);
+        }
     }
 
     private function getLogger(string $logName): Logger
