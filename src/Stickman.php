@@ -11,6 +11,7 @@ use Amp\Log\StreamHandler;
 use Auryn\Injector;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface as Psr11Container;
+use Psr\Log\LoggerInterface;
 
 class Stickman
 {
@@ -38,6 +39,8 @@ class Stickman
         if ($container instanceof Injector) {
             $container->share($this->httpServer);
         }
+
+        $this->reportFinish($logger);
     }
 
     private function getLogger(string $logName): Logger
@@ -48,5 +51,12 @@ class Stickman
         $logger->pushHandler($logHandler);
         
         return $logger;
+    }
+
+    private function reportFinish(LoggerInterface $logger)
+    {
+        $usage = number_format(memory_get_peak_usage(true) / 1024 / 1024, 0);
+
+        $logger->debug("Stickman bootstrap end. Memory usage: $usage MB");
     }
 }
