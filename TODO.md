@@ -25,6 +25,8 @@ For alpha
 
 17. Make Dispatcher a bit extendable/add interface? So people can add things like arguments resolution
 
+18. Add group/prefix and middleware as a new class attribute
+
 For beta?
 
 1. PSR-12 ?
