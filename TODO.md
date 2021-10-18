@@ -9,5 +9,11 @@ For alpha
 5. Write docs
 6. Write more interfaces
 7. Check what else is not covered from Amphp
+8. ServerObserver
+9. Trailers?
+10. Performance and running on prod? 
+11. Check the rest of the addons how they can integrate optionally?
+12. Write tests
+13. Review the classes public methods, maybe make the exported api better?
 
 For beta?
