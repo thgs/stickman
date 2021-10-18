@@ -10,6 +10,7 @@ use Monolog\Logger;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionMethod;
+use TypeError;
 
 // collects routes and adds/configures a given Router
 class RouteCollector
@@ -22,37 +23,58 @@ class RouteCollector
     {
         $reflection = new ReflectionClass($class);
 
+        $classRoutes = $reflection->getAttributes(Route::class);
+        $this->addClassRoute($class, $classRoutes);
+
         foreach ($reflection->getMethods() as $method) {
-            $attributes = $method->getAttributes();
+            $attributes = $method->getAttributes(Route::class);
 
             /** @var ReflectionAttribute $attribute */
             foreach ($attributes as $attribute) {
-                $this->addRoute($method, $attribute);
+                $this->addMethodRoute($method, $attribute);
             }
         }
     }
 
-    private function addRoute(ReflectionMethod $method, ReflectionAttribute $attribute)
+    private function getDispatcherCallback(string $toDispatch): callable
+    {
+        return function (Request $request) use ($toDispatch) {
+            try {
+                $arguments = [':request' => $request];
+                foreach ($request->getAttribute(Router::class) as $key => $value) {
+                    // if passed without ':', it will try to instantiate the class given (!)
+                    $arguments[':' . $key] = $value;
+                }
+
+                return $this->injector->execute($toDispatch, $arguments);
+            } catch (\Throwable $e) {
+                $this->logger->error(get_class($e) . ' - ' . $e->getMessage());
+                var_dump($e->getTraceAsString());
+            }
+        };
+    }
+
+    private function addClassRoute(string $class, array $attributes)
+    {
+        $callable = $this->getDispatcherCallback($class . '::__invoke');
+        $requestHandler = new CallableRequestHandler($callable);
+
+        foreach ($attributes as $attribute) {
+            if (!$attribute instanceof ReflectionAttribute) {
+                throw new TypeError('Expecting ReflectionAttribute');
+            }
+
+            $routeArguments = $attribute->getArguments();
+            $this->router->addRoute($routeArguments['method'], $routeArguments['path'], $requestHandler);
+        }
+    }
+
+    private function addMethodRoute(ReflectionMethod $method, ReflectionAttribute $attribute)
     {
         $routeArguments = $attribute->getArguments();
 
-        $callable = $method->class . '::' . $method->name;
-        $requestHandler = new CallableRequestHandler(
-            function (Request $request) use ($callable) {
-                try {
-                    $arguments = [':request' => $request];
-                    foreach ($request->getAttribute(Router::class) as $key => $value) {
-                        // if passed without ':', it will try to instantiate the class given (!)
-                        $arguments[':' . $key] = $value;
-                    }
-
-                    return $this->injector->execute($callable, $arguments);
-                } catch (\Throwable $e) {
-                    $this->logger->error(get_class($e) . ' - ' . $e->getMessage());
-                    var_dump($e->getTraceAsString());
-                }
-            }
-        );
+        $callable = $this->getDispatcherCallback($method->class . '::' . $method->name);
+        $requestHandler = new CallableRequestHandler($callable);
 
         $this->router->addRoute($routeArguments['method'], $routeArguments['path'], $requestHandler);
     }
