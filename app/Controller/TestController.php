@@ -1,6 +1,6 @@
 <?php
 
-namespace Thgs\Stickman\Controller;
+namespace App\Controller;
 
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;

@@ -12,7 +12,8 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Thgs\\Stickman\\": "src/"
+            "Thgs\\Stickman\\": "src/",
+            "App\\": "app/"
         }
     },
     "authors": [

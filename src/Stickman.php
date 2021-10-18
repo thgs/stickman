@@ -13,14 +13,14 @@ use Amp\Log\StreamHandler;
 use Amp\Socket;
 use Auryn\Injector;
 use Monolog\Logger;
-use Thgs\Stickman\Controller\TestController;
 
 class Stickman
 {
     public HttpServer $httpServer;
 
     public function __construct(
-        ConfiguredContainerFactoryInterface|Injector $containerOrFactory
+        ConfiguredContainerFactoryInterface|Injector $containerOrFactory,
+        HandlersCollection $handlers,
     ) {
         # TLS
         $cert = new Socket\Certificate(__DIR__ . '/../test/server.pem');
@@ -47,9 +47,14 @@ class Stickman
         $logger = new Logger('server');
         $logger->pushHandler($logHandler);
 
-        $injector = $containerOrFactory instanceof Injector ? $containerOrFactory : $containerOrFactory->getContainer();
+        $injector = $containerOrFactory instanceof Injector 
+            ? $containerOrFactory 
+            : $containerOrFactory->getContainer();
+
         $routeCollector = new RouteCollector($router, $logger, $injector);
-        $routeCollector->collectFrom(TestController::class);
+        foreach ($handlers->collection as $class) {
+            $routeCollector->collectFrom($class);
+        }
 
         $this->httpServer = new HttpServer($servers, $routeCollector->getRouter(), $logger);
     }
