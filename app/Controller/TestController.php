@@ -4,12 +4,12 @@ namespace App\Controller;
 
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
-use Amp\Http\Server\Router;
 use Amp\Http\Status;
 use Generator;
 use Psr\Log\LoggerInterface;
 use Thgs\Stickman\Route;
 
+#[Route(method: "GET", path: "invokable/{name}")]
 class TestController
 {
     public function __construct(private LoggerInterface $logger)
@@ -32,6 +32,13 @@ class TestController
 
     #[Route(method: "GET", path: "some-arg-action/{name}")]
     public function someArgAction(Request $request, $name): Response|Generator
+    {
+        return new Response(Status::OK, ['content-type' => 'text/plain'], 'Name: ' . $name); 
+    }
+
+    // Amphp Router does not support array for method
+
+    public function __invoke(Request $request, $name): Response|Generator
     {
         return new Response(Status::OK, ['content-type' => 'text/plain'], 'Name: ' . $name); 
     }
