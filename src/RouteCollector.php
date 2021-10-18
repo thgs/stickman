@@ -83,7 +83,7 @@ class RouteCollector
     private function containerMake(string $definition)
     {
         $this->logger->debug('Container making: ' . $definition);
-        
+
         return $this->container instanceof Injector
             ? $this->container->make($definition)
             : $this->container->get($definition);
