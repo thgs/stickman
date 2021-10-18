@@ -14,7 +14,7 @@ use ReflectionMethod;
 // collects routes and adds/configures a given Router
 class RouteCollector
 {
-    public function __construct(private Router $router, private Logger $logger, private Injector $injector)
+    public function __construct(private Router $router, private Injector $injector, private Logger $logger)
     {
     }
 
@@ -38,7 +38,11 @@ class RouteCollector
 
         $callable = $method->class . '::' . $method->name;
         $requestHandler = new CallableRequestHandler(function (Request $request) use ($callable) {
-            return $this->injector->execute($callable, [':request' => $request]);
+            try {
+                return $this->injector->execute($callable, [':request' => $request]);
+            } catch (\Throwable $e) {
+                var_dump($e->getTraceAsString());
+            }
         });
 
         $this->router->addRoute($routeArguments['method'], $routeArguments['path'], $requestHandler);

@@ -10,8 +10,9 @@ Amp\Loop::run(static function () {
     $containerConfig = new PhpFileContainerConfiguration(\dirname(__DIR__) . '/app/config/container.php');
     $handlersCollection = require \dirname(__DIR__) . '/app/config/handlers.php';
     $serversCollection = require \dirname(__DIR__) . '/app/config/servers.php';
+    $options = require \dirname(__DIR__) . '/app/config/httpServerOptions.php';
 
-    $stickman = new Stickman($containerConfig, $handlersCollection, $serversCollection);
+    $stickman = new Stickman($containerConfig, $handlersCollection, $serversCollection, $options);
 
     # Start server
     $server = $stickman->httpServer;
