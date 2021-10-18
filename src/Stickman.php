@@ -4,13 +4,9 @@ namespace Thgs\Stickman;
 
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\Http\Server\HttpServer;
-use Amp\Http\Server\RequestHandler\CallableRequestHandler;
-use Amp\Http\Server\Response;
 use Amp\Http\Server\Router;
-use Amp\Http\Status;
 use Amp\Log\ConsoleFormatter;
 use Amp\Log\StreamHandler;
-use Amp\Socket;
 use Auryn\Injector;
 use Monolog\Logger;
 
