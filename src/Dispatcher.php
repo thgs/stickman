@@ -4,6 +4,7 @@ namespace Thgs\Stickman;
 
 use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
+use Amp\Http\Server\Router;
 use Generator;
 use Psr\Log\LoggerInterface;
 use Thgs\Stickman\Dispatch\DispatchCall;
