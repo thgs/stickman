@@ -3,6 +3,7 @@
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\Log\ConsoleFormatter;
 use Amp\Log\StreamHandler;
+use App\Controller\TestController;
 use Auryn\Injector;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
@@ -17,5 +18,7 @@ $injector->prepare(Logger::class, function ($obj, $injector) {
 });
 
 $injector->alias(LoggerInterface::class, Logger::class);
+
+$injector->share(TestController::class);
 
 return $injector;
