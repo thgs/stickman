@@ -65,7 +65,12 @@ class RouteCollector
             }
 
             $routeArguments = $attribute->getArguments();
-            $this->router->addRoute($routeArguments['method'], $routeArguments['path'], $requestHandler);
+            $middleware = [];
+            foreach ($routeArguments['middleware'] as $class) {
+                $middleware[] = $this->injector->make($class);
+            }
+
+            $this->router->addRoute($routeArguments['method'], $routeArguments['path'], $requestHandler, ...$middleware);
         }
     }
 
@@ -76,7 +81,12 @@ class RouteCollector
         $callable = $this->getDispatcherCallback($method->class . '::' . $method->name);
         $requestHandler = new CallableRequestHandler($callable);
 
-        $this->router->addRoute($routeArguments['method'], $routeArguments['path'], $requestHandler);
+        $middleware = [];
+        foreach ($routeArguments['middleware'] as $class) {
+            $middleware[] = $this->injector->make($class);
+        }
+
+        $this->router->addRoute($routeArguments['method'], $routeArguments['path'], $requestHandler, ...$middleware);
     }
 
     public function getRouter()

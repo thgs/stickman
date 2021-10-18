@@ -7,7 +7,7 @@ use Attribute;
 #[Attribute]
 class Route
 {
-    public function __construct(public string $method = '', public string $path = '')
+    public function __construct(public string $method = '', public string $path = '', public array $middleware = [])
     {
     }
 
