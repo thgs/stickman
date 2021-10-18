@@ -6,12 +6,12 @@ use Amp\Http\Server\Request;
 use Amp\Http\Server\Response;
 use Amp\Http\Status;
 use Generator;
-use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 use Thgs\Stickman\Route;
 
 class TestController
 {
-    public function __construct(private Logger $logger)
+    public function __construct(private LoggerInterface $logger)
     {
     }
 
