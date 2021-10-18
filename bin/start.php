@@ -11,7 +11,9 @@ use Thgs\Stickman\Stickman;
 Amp\Loop::run(static function () {
     $containerConfig = new PhpFileContainerConfiguration(\dirname(__DIR__) . '/app/config/container.php');
     $handlersCollection = require \dirname(__DIR__) . '/app/config/handlers.php';
-    $stickman = new Stickman($containerConfig, $handlersCollection);
+    $serversCollection = require \dirname(__DIR__) . '/app/config/servers.php';
+
+    $stickman = new Stickman($containerConfig, $handlersCollection, $serversCollection);
 
     # Start server
     $server = $stickman->httpServer;

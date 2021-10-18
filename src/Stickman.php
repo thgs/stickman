@@ -21,26 +21,8 @@ class Stickman
     public function __construct(
         ConfiguredContainerFactoryInterface|Injector $containerOrFactory,
         HandlersCollection $handlers,
+        ServerCollection $servers,
     ) {
-        # TLS
-        $cert = new Socket\Certificate(__DIR__ . '/../test/server.pem');
-        $context = (new Socket\BindContext)
-            ->withTlsContext((new Socket\ServerTlsContext)->withDefaultCertificate($cert));
-
-        # Servers
-        $servers = [
-            Socket\Server::listen("0.0.0.0:1337"),
-            Socket\Server::listen("[::]:1337"),
-            Socket\Server::listen("0.0.0.0:1338", $context),
-            Socket\Server::listen("[::]:1338", $context),
-        ];
-
-        # Router
-        $router = new Router();
-        $router->addRoute('GET', '/', new CallableRequestHandler(function () {
-            return new Response(Status::OK, ['content-type' => 'text/plain'], 'Hello, world!');
-        }));
-
         # Logger - for now
         $logHandler = new StreamHandler(new ResourceOutputStream(STDOUT));
         $logHandler->setFormatter(new ConsoleFormatter);
@@ -51,11 +33,12 @@ class Stickman
             ? $containerOrFactory 
             : $containerOrFactory->getContainer();
 
+        $router = new Router();
         $routeCollector = new RouteCollector($router, $logger, $injector);
         foreach ($handlers->collection as $class) {
             $routeCollector->collectFrom($class);
         }
 
-        $this->httpServer = new HttpServer($servers, $routeCollector->getRouter(), $logger);
+        $this->httpServer = new HttpServer($servers->collection, $routeCollector->getRouter(), $logger);
     }
 }
