@@ -20,10 +20,11 @@ class Stickman
     public function __construct(
         private Injector $injector,
         Configuration $configuration,
+        ?Router $router = null,
     ) {
         $this->logger = $this->getLogger($configuration->logName);
 
-        $router = new Router();
+        $router = $router ?? new Router();
         $routeCollector = new RouteCollector($this->logger);
         foreach ($configuration->handlers->collection as $class) {
             $routeCollector->collectFrom($class);

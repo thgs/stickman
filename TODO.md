@@ -6,7 +6,7 @@ For alpha
 2. Sort out those requires like we did for PhpFileContainerConfiguration
 3. Remove those *Collections, we need something better?
 
-4. Allow an external router to come in
+4. ~~Allow an external router to come in~~
 5. Write docs
 6. Write more interfaces
 
