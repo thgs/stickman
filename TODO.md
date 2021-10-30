@@ -19,8 +19,8 @@ For alpha
 12. Write tests
 13. Review the classes public methods, maybe make the exported api better?
 
-14. Support PSR container
-15. Make Stickman more than configuration
+14. ~~Support PSR container~~ removed
+15. Make Stickman more than configuration (oh yea?)
 16. ~~Change to early instantiation rather than on-request that it is now~~
 
 17. Make Dispatcher a bit extendable/add interface? So people can add things like arguments resolution
