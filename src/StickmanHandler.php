@@ -2,13 +2,10 @@
 
 namespace Thgs\Stickman;
 
-use Amp\Failure;
 use Amp\Http\Server\Request;
 use Amp\Http\Server\RequestHandler;
-use Amp\Http\Server\Response;
 use Amp\Http\Server\Router;
 use Amp\Promise;
-use Generator;
 use Psr\Log\LoggerInterface;
 use Thgs\Stickman\Dispatch\DispatchCall;
 use Throwable;
