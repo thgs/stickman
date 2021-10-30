@@ -15,7 +15,7 @@ class RouteCollection
         $this->routes = new SplObjectStorage();
     }
 
-    public function addRoutes(array $routes, DispatchCall $call)
+    public function addRoutes(array $routes, DispatchCall $call): void
     {
         if (!isset($this->routes[$call])) {
             $this->routes[$call] = $routes;
