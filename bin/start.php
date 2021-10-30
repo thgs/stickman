@@ -3,18 +3,16 @@
 
 require \dirname(__DIR__) . "/vendor/autoload.php";
 
-use Thgs\Stickman\Configuration;
-use Thgs\Stickman\PhpFileContainerConfiguration;
-use Thgs\Stickman\Stickman;
+use Thgs\Stickman;
 
 Amp\Loop::run(static function () {
-    $containerConfig = new PhpFileContainerConfiguration(\dirname(__DIR__) . '/app/config/container.php');
+    $injector = require \dirname(__DIR__) . '/app/config/injector.php';
     $handlersCollection = require \dirname(__DIR__) . '/app/config/handlers.php';
     $serversCollection = require \dirname(__DIR__) . '/app/config/servers.php';
     $options = require \dirname(__DIR__) . '/app/config/httpServerOptions.php';
 
-    $configuration = new Configuration($handlersCollection, $serversCollection, $options);
-    $stickman = new Stickman($containerConfig->getContainer(), $configuration);
+    $configuration = new Stickman\Configuration($handlersCollection, $serversCollection, $options);
+    $stickman = new Stickman\Stickman($injector, $configuration);
 
     # Start server
     $server = $stickman->httpServer;
