@@ -7,14 +7,13 @@ use Amp\Http\Server\RequestHandler;
 use Amp\Http\Server\Router;
 use Amp\Promise;
 use Psr\Log\LoggerInterface;
-use Thgs\Stickman\Dispatch\DispatchCall;
 use Throwable;
 
 use function Amp\call;
 
 class StickmanHandler implements RequestHandler
 {
-    public function __construct(private $instance, private DispatchCall $dispatchCall, private LoggerInterface $logger)
+    public function __construct(private $instance, private string $method, private LoggerInterface $logger)
     {
     }
 
@@ -28,10 +27,9 @@ class StickmanHandler implements RequestHandler
     public function handleRequest(Request $request): Promise
     {
         $arguments = $this->prepareArguments($request);
-        $method = $this->dispatchCall->getMethod();
 
-        $promise = call(function () use ($method, $arguments) {
-            return $this->instance->{$method}(...$arguments);
+        $promise = call(function () use ($arguments) {
+            return $this->instance->{$this->method}(...$arguments);
         });
 
         // @todo this probably could be done better.

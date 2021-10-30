@@ -97,6 +97,6 @@ class Stickman
     {
         $instance = $this->make($dispatchCall->getClass());
 
-        return new StickmanHandler($instance, $dispatchCall, $this->logger);
+        return new StickmanHandler($instance, $dispatchCall->getMethod(), $this->logger);
     }
 }
