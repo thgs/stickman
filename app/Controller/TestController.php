@@ -21,20 +21,20 @@ class TestController
     public function someAction(Request $request): Response|Generator
     {
         $this->logger->info('works here');
-        
-        return new Response(Status::OK, ['content-type' => 'text/plain'], 'Finally, some .. action!'); 
+
+        return new Response(Status::OK, ['content-type' => 'text/plain'], 'Finally, some .. action!');
     }
 
     #[Route(method: "POST", path: "some-post-action")]
     public function somePostAction(Request $request): Response|Generator
     {
-        return new Response(Status::OK, ['content-type' => 'text/plain'], 'Finally, some POST action!'); 
+        return new Response(Status::OK, ['content-type' => 'text/plain'], 'Finally, some POST action!');
     }
 
     #[Route(method: "GET", path: "some-arg-action/{name}")]
     public function someArgAction(Request $request, $name): Response|Generator
     {
-        return new Response(Status::OK, ['content-type' => 'text/plain'], 'Name: ' . $name); 
+        return new Response(Status::OK, ['content-type' => 'text/plain'], 'Name: ' . $name);
     }
 
     // Amphp Router does not support array for method
@@ -42,7 +42,7 @@ class TestController
     // Here we could simply put the route in this method and do not have the extra stuff for class attributes
     public function __invoke(Request $request, $name): Response|Generator
     {
-        return new Response(Status::OK, ['content-type' => 'text/plain'], 'Name: ' . $name); 
+        return new Response(Status::OK, ['content-type' => 'text/plain'], 'Name: ' . $name);
     }
 
     // @todo check how before/after work here
@@ -52,6 +52,6 @@ class TestController
     {
         $requestTime = $request->getHeader('x-request-start');
 
-        return new Response(Status::OK, ['content-type' => 'text/plain'], 'Name: ' . $name . ' @' . $requestTime); 
+        return new Response(Status::OK, ['content-type' => 'text/plain'], 'Name: ' . $name . ' @' . $requestTime);
     }
 }
