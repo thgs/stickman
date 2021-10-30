@@ -4,40 +4,43 @@ namespace Thgs\Stickman;
 
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\Http\Server\HttpServer;
-use Amp\Http\Server\Options;
 use Amp\Http\Server\Router;
 use Amp\Log\ConsoleFormatter;
 use Amp\Log\StreamHandler;
 use Auryn\Injector;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
+use Thgs\Stickman\Dispatch\DispatchCall;
+use TypeError;
 
 class Stickman
 {
-    public const DEFAULT_LOGNAME = 'server';
-
     public HttpServer $httpServer;
 
     public function __construct(
-        Injector $container,
-        HandlersCollection $handlers,
-        ServerCollection $servers,
-        Options $options = null,
-        $logName = self::DEFAULT_LOGNAME
+        private Injector $injector,
+        Configuration $configuration,
     ) {
-        $logger = $this->getLogger($logName);
+        $this->logger = $this->getLogger($configuration->logName);
 
         $router = new Router();
-        $routeCollector = new RouteCollector($router, $container, $logger);
-        foreach ($handlers->collection as $class) {
+        $routeCollector = new RouteCollector($this->logger);
+        foreach ($configuration->handlers->collection as $class) {
             $routeCollector->collectFrom($class);
         }
 
-        $this->httpServer = new HttpServer($servers->collection, $routeCollector->getRouter(), $logger, $options);
+        $router = $this->configureRouter($router, $routeCollector->getRouteCollection());
 
-        $container->share($this->httpServer);
+        $this->httpServer = new HttpServer(
+            $configuration->servers->collection,
+            $router,
+            $this->logger,
+            $configuration->options
+        );
 
-        $this->reportFinish($logger);
+        $this->injector->share($this->httpServer);
+
+        $this->reportFinish($this->logger);
     }
 
     private function getLogger(string $logName): Logger
@@ -54,6 +57,46 @@ class Stickman
     {
         $usage = number_format(memory_get_peak_usage(true) / 1024 / 1024, 0);
 
-        $logger->debug("Stickman bootstrap end. Memory usage: $usage MB");
+        $this->logger->debug("Stickman bootstrap end. Memory usage: $usage MB");
+    }
+
+    protected function configureRouter(Router $router, RouteCollection $collection): Router
+    {
+        foreach ($collection->getRoutes() as $dispatchCall => $routes) {
+            $handler = $this->getHandler($dispatchCall);
+
+            foreach ($routes as $route) {
+                if (!$route instanceof Route) {
+                    throw new TypeError('Expecting Route instance');
+                }
+
+                $middleware = [];
+                foreach ($route->getMiddleware() as $middlewareClass) {
+                    $middleware[] = $this->make($middlewareClass);
+                }
+
+                $this->logger->debug('Add route: ' . $route->getMethod() . ' ' . $route->getPath() . ' -> ' . $dispatchCall->getCallable());
+
+                $router->addRoute($route->getMethod(), $route->getPath(), $handler, ...$middleware);
+            }
+        }
+
+        return $router;
+    }
+
+    protected function make(string $definition)
+    {
+        $ret = $this->injector->make($definition);
+
+        $this->logger->debug('Container making: ' . $definition . ' #' . spl_object_id($ret));
+
+        return $ret;
+    }
+
+    protected function getHandler(DispatchCall $dispatchCall): StickmanHandler
+    {
+        $instance = $this->make($dispatchCall->getClass());
+
+        return new StickmanHandler($instance, $dispatchCall, $this->logger);
     }
 }
