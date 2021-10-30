@@ -10,6 +10,7 @@ use Generator;
 use Psr\Log\LoggerInterface;
 use Thgs\Stickman\Route;
 
+// The below Route will dispatch from __invoke
 #[Route(method: "GET", path: "invokable/{name}")]
 class TestController
 {
@@ -37,15 +38,13 @@ class TestController
         return new Response(Status::OK, ['content-type' => 'text/plain'], 'Name: ' . $name);
     }
 
-    // Amphp Router does not support array for method
+    // @todo Amphp Router does not support array for method
 
-    // Here we could simply put the route in this method and do not have the extra stuff for class attributes
+    // @todo We could simply put the route in this method and do not have the extra stuff for class attributes
     public function __invoke(Request $request, $name): Response|Generator
     {
         return new Response(Status::OK, ['content-type' => 'text/plain'], 'Name: ' . $name);
     }
-
-    // @todo check how before/after work here
 
     #[Route(method: "GET", path: "middleware/{name}", middleware: [SomeMiddleware::class])]
     public function someWithMiddleware(Request $request, $name): Response|Generator
