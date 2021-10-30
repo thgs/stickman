@@ -10,7 +10,6 @@ use Amp\Log\ConsoleFormatter;
 use Amp\Log\StreamHandler;
 use Auryn\Injector;
 use Monolog\Logger;
-use Psr\Container\ContainerInterface as Psr11Container;
 use Psr\Log\LoggerInterface;
 
 class Stickman
@@ -20,7 +19,7 @@ class Stickman
     public HttpServer $httpServer;
 
     public function __construct(
-        Psr11Container|Injector $container,
+        Injector $container,
         HandlersCollection $handlers,
         ServerCollection $servers,
         Options $options = null,
@@ -33,12 +32,10 @@ class Stickman
         foreach ($handlers->collection as $class) {
             $routeCollector->collectFrom($class);
         }
-        
+
         $this->httpServer = new HttpServer($servers->collection, $routeCollector->getRouter(), $logger, $options);
 
-        if ($container instanceof Injector) {
-            $container->share($this->httpServer);
-        }
+        $container->share($this->httpServer);
 
         $this->reportFinish($logger);
     }
@@ -49,7 +46,7 @@ class Stickman
         $logHandler->setFormatter(new ConsoleFormatter);
         $logger = new Logger($logName);
         $logger->pushHandler($logHandler);
-        
+
         return $logger;
     }
 

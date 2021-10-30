@@ -6,7 +6,6 @@ use Amp\Http\Server\RequestHandler\CallableRequestHandler;
 use Amp\Http\Server\Router;
 use Auryn\Injector;
 use Monolog\Logger;
-use Psr\Container\ContainerInterface as Psr11Container;
 use ReflectionAttribute;
 use ReflectionClass;
 use Thgs\Stickman\Dispatch\DispatchCall;
@@ -14,7 +13,7 @@ use TypeError;
 
 class RouteCollector
 {
-    public function __construct(private Router $router, private Psr11Container|Injector $container, private Logger $logger)
+    public function __construct(private Router $router, private Injector $container, private Logger $logger)
     {
     }
 
@@ -31,7 +30,7 @@ class RouteCollector
         foreach ($reflection->getMethods() as $method) {
             $attributes = $method->getAttributes(Route::class);
             $methodRoutes = $this->getRouteAttributeInstances($attributes);
-            
+
             $dispatchCall = new DispatchCall($class, $method->getName());
 
             $this->addRoutes($dispatchCall, $methodRoutes);
@@ -84,9 +83,7 @@ class RouteCollector
     {
         $this->logger->debug('Container making: ' . $definition);
 
-        return $this->container instanceof Injector
-            ? $this->container->make($definition)
-            : $this->container->get($definition);
+        return $this->container->make($definition);
     }
 
     public function getRouter()
