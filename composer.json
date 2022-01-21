@@ -3,10 +3,10 @@
     "description": "a web framework based on amphp",
     "type": "project",
     "require": {
+        "php": "^8.0",
         "amphp/http-server": "^2.1",
         "amphp/http-server-router": "^1.0",
-        "php": "^8.0",
-        "rdlowrey/auryn": "^1.4",
+        "amphp/injector": "1.x-dev",
         "amphp/log": "^1.1"
     },
     "license": "MIT",
@@ -21,5 +21,10 @@
             "name": "thgs",
             "email": "theogpl57@gmail.com"
         }
-    ]
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true
+    }
 }
