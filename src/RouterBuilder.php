@@ -2,40 +2,61 @@
 
 namespace Thgs\Stickman;
 
+use Amp\Http\Server\Middleware;
 use Amp\Http\Server\Router;
 use Amp\Injector\Container;
 
 class RouterBuilder
 {
-    private Router $router;
+    private $middlewares = [];
+    private $prefix = '';
 
-    public function __construct(int $cacheSize = Router::DEFAULT_CACHE_SIZE)
+    public function middlewareGroup(Middleware ...$middlewares): self
     {
-        $this->router = new Router($cacheSize);
+        $this->middlewares = $middlewares;
+        return $this;
     }
 
-    // not sure if we should allow handler OR class, we could just accept class? what if you want to pass a callable
-    public function addRoute(string $method, string $route, string|callable $handlerOrClass, $middlewares)
+    public function clearMiddlewareGroup(): self
     {
-        $clone = clone $this;
-        $clone->routes[] = [
+        $this->middlewares = [];
+        return $this;
+    }
+
+    public function prefix(string $prefix): self
+    {
+        $this->prefix = $prefix;
+        return $this;
+    }
+
+    public function clearPrefix(): self
+    {
+        $this->prefix = '';
+        return $this;
+    }
+
+    public function addRoute(string $method, string $route, string|callable $handlerOrClass, Middleware ...$middlewares): self
+    {
+        $this->routes[] = [
             'method' => $method,
-            'route' => $route,
+            'route' => $this->prefix . $route,
             'handlerOrClass' => $handlerOrClass,
-            'middlewares' => $middlewares
+            'middlewares' => array_merge($middlewares, $this->middlewares),
         ];
 
-        return $clone;
+        return $this;
     }
 
-    public function build(Container $container)
+    public function build(Container $container, int $cacheSize = Router::DEFAULT_CACHE_SIZE): Router
     {
+        $router = new Router($cacheSize);
+
         foreach ($this->routes as $route) {
-            $handler = $this->getHandler($route['handler'], $container);
-            $this->router->addRoute($route['method'], $route['route'], $handler, ...$route['middlewares']);
+            $handler = $this->getHandler($route['handlerOrClass'], $container);
+            $router->addRoute($route['method'], $route['route'], $handler, ...$route['middlewares']);
         }
 
-        return $this->router;
+        return $router;
     }
 
     private function getHandler(string|callable $handlerOrClass, Container $container)
