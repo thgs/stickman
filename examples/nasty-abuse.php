@@ -2,7 +2,7 @@
 <?php
 
 // see example code at the bottom first for the use case
-// everything in InjectorDecorators is complete abuse/hack
+// everything in InjectorAbuse is complete abuse/hack
 namespace InjectorAbuse {
     require_once \dirname(__DIR__) . "/vendor/autoload.php";
 
