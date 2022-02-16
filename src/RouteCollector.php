@@ -17,20 +17,25 @@ class RouteCollector
         $this->collection = new RouteCollection();
     }
 
-    public function collectFrom($class)
+    public function collectFromClass($class)
     {
         $reflection = new ReflectionClass($class);
         $classAttributes = $reflection->getAttributes(Route::class);
         $classRoutes = $this->getRouteAttributeInstances($classAttributes);
+        if (!empty($classRoutes)) {
+            $this->collection->addRoutes($classRoutes, new DispatchCall($class));
+        }
 
-        $this->collection->addRoutes($classRoutes, new DispatchCall($class));
 
         foreach ($reflection->getMethods() as $method) {
             $attributes = $method->getAttributes(Route::class);
             $methodRoutes = $this->getRouteAttributeInstances($attributes);
 
-            $this->collection->addRoutes($methodRoutes, new DispatchCall($class, $method->getName()));
+            if (!empty($methodRoutes)) {
+                $this->collection->addRoutes($methodRoutes, new DispatchCall($class, $method->getName()));
+            }
         }
+        return $this;
     }
 
     private function getRouteAttributeInstances(array $attributes)
