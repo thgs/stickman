@@ -10,6 +10,7 @@ class RouterBuilder
 {
     private $middlewares = [];
     private $prefix = '';
+    private $handler;
 
     public function middlewareGroup(Middleware ...$middlewares): self
     {
@@ -35,31 +36,41 @@ class RouterBuilder
         return $this;
     }
 
-    public function addRoute(string $method, string $route, string|callable $handlerOrClass, Middleware ...$middlewares): self
+    public function setHandler(string|callable $handlerOrClass): self
+    {
+        $this->handler = $handlerOrClass;
+        return $this;
+    }
+
+    // @todo if have setHandler then $handlerOrClass is ignored
+    public function addRoute(string $method, string $uri, string|callable $handlerOrClass, string|callable ...$middlewares): self
     {
         $this->routes[] = [
             'method' => $method,
-            'route' => $this->prefix . $route,
-            'handlerOrClass' => $handlerOrClass,
+            'uri' => $this->prefix . $uri,
+            'handlerOrClass' => $this->handler ?: $handlerOrClass,
             'middlewares' => array_merge($middlewares, $this->middlewares),
         ];
 
         return $this;
     }
 
-    public function build(Container $container, int $cacheSize = Router::DEFAULT_CACHE_SIZE): Router
+    public function buildWith(Container $container, int $cacheSize = Router::DEFAULT_CACHE_SIZE): Router
     {
         $router = new Router($cacheSize);
 
         foreach ($this->routes as $route) {
-            $handler = $this->getHandler($route['handlerOrClass'], $container);
-            $router->addRoute($route['method'], $route['route'], $handler, ...$route['middlewares']);
+            $handler = $this->make($route['handlerOrClass'], $container);
+            $middlewares = $this->makeMiddlewares($container, ...$route['middlewares']);
+            $router->addRoute($route['method'], $route['uri'], $handler, ...$middlewares);
         }
 
         return $router;
     }
 
-    private function getHandler(string|callable $handlerOrClass, Container $container)
+    // add buildWithApplication
+
+    private function make(string|callable $handlerOrClass, Container $container)
     {
         // @todo this stops functions from being passed as strings, as they are still callable but what if they have deps
         if (is_callable($handlerOrClass)) {
@@ -67,5 +78,14 @@ class RouterBuilder
         }
 
         return $container->get($handlerOrClass);
+    }
+
+    private function makeMiddlewares(Container $container, string|callable ...$references)
+    {
+        $middlewares = [];
+        foreach ($references as $reference) {
+            $middlewares[] = $this->make($reference, $container);
+        }
+        return $middlewares;
     }
 }
